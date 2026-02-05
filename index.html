@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Will you be my Valentine?</title>
 
+  <!-- Confetti library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -29,7 +30,7 @@
       position: relative;
     }
 
-    /* ✅ Floating hearts */
+    /* ✅ Floating hearts background */
     .hearts {
       position: fixed;
       inset: 0;
@@ -51,6 +52,7 @@
       to   { transform: translateY(-120vh) translateX(40px) scale(1.2); opacity: 0; }
     }
 
+    /* FULL-SCREEN CONFETTI CANVAS */
     #confettiCanvas {
       position: fixed;
       inset: 0;
@@ -69,7 +71,25 @@
       text-align: center;
       box-shadow: 0 18px 60px rgba(0,0,0,.15);
       position: relative;
-      z-index: 2;
+      z-index: 2; /* above hearts */
+    }
+
+    /* ✅ Cute music chip (only shows if autoplay blocked) */
+    #musicGate {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 10px 12px;
+      border: 0;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      background: rgba(17, 24, 39, 0.92);
+      color: #fff;
+      box-shadow: 0 10px 26px rgba(0,0,0,.2);
+      z-index: 10;
+      display: none;
     }
 
     .art {
@@ -92,7 +112,7 @@
       touch-action: none;
     }
 
-    button {
+    button.choice {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
@@ -135,7 +155,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,.18);
     }
 
-    /* NO click toast */
+    /* Toast message */
     .toast {
       position: fixed;
       left: 50%;
@@ -161,26 +181,6 @@
       from { transform: scale(.96); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-
-    /* ✅ Tap-to-start music (only if autoplay blocked) */
-    #musicGate {
-      position: fixed;
-      inset: auto 16px 16px 16px;
-      margin: auto;
-      max-width: 520px;
-      width: calc(100% - 32px);
-      padding: 14px 16px;
-      border: 0;
-      border-radius: 14px;
-      font-weight: 800;
-      font-size: 16px;
-      cursor: pointer;
-      background: #111827;
-      color: #fff;
-      box-shadow: 0 10px 26px rgba(0,0,0,.2);
-      z-index: 10001;
-      display: none;
-    }
   </style>
 </head>
 
@@ -188,14 +188,16 @@
   <div class="hearts" id="hearts"></div>
   <canvas id="confettiCanvas"></canvas>
   <div class="toast" id="toast"></div>
-  <button id="musicGate">Tap to start music 🎵</button>
 
-  <!-- ✅ Your audio file must be in the SAME repo folder as index.html -->
+  <!-- ✅ Audio (file is in same GitHub repo folder as index.html) -->
   <audio id="bgMusic" preload="auto">
     <source src="where-is-my-husband-raye.mp3" type="audio/mpeg">
   </audio>
 
   <main class="card">
+    <!-- ✅ Cute music chip (only appears if autoplay blocked) -->
+    <button id="musicGate">🎵 Tap for music</button>
+
     <!-- Top Art (hide after YES) -->
     <svg class="art" id="topArt" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -234,11 +236,11 @@
             fill="#ff7aa2"/>
     </svg>
 
-    <h1 id="question"> Scorpio will you be my valentine?</h1>
+    <h1 id="question">nirali will you be my valentine?</h1>
 
     <section class="button-zone" id="zone">
-      <button id="yesBtn">Yes</button>
-      <button id="noBtn">No</button>
+      <button class="choice" id="yesBtn">Yes</button>
+      <button class="choice" id="noBtn">No</button>
     </section>
 
     <div class="hint" id="hint">“No” seems a bit shy 😈</div>
@@ -249,8 +251,7 @@
         Yaay jaana ne haa bol diya 🥳
       </h2>
 
-      <img
-        class="gif"
+      <img class="gif"
         src="https://media1.tenor.com/m/9svmcrAzGgMAAAAd/yes-yay.gif"
         alt="Yes Yay GIF"
       />
@@ -290,7 +291,7 @@
     const toast = document.getElementById("toast");
     const topArt = document.getElementById("topArt");
 
-    /* ---------------- NO click messages ---------------- */
+    /* ---------------- Toast messages ---------------- */
     const noMessages = [
       "euuee karwanu jaana na bolwanu",
       "heddaaa ee na kabo aaa",
@@ -323,6 +324,7 @@
 
     function fullScreenConfetti() {
       const end = Date.now() + 1600;
+
       (function frame() {
         confettiInstance({
           particleCount: 12,
@@ -377,7 +379,7 @@
       noBtn.style.top = newTop + "px";
       noBtn.style.transform = "none";
 
-      growYes(); // ✅ every NO -> YES bigger
+      growYes();
     }
 
     zone.addEventListener("pointermove", e => {
@@ -391,6 +393,7 @@
 
     noBtn.addEventListener("click", (e) => {
       e.preventDefault();
+
       const msg = noMessages[Math.min(noClickCount, noMessages.length - 1)];
       showToast(msg);
       noClickCount++;
@@ -405,13 +408,13 @@
     const bgMusic = document.getElementById("bgMusic");
     const musicGate = document.getElementById("musicGate");
 
-    // Segment 1: 0:10 to 1:04 (loop)
-    const LOOP_START = 10;  // seconds
-    const LOOP_END   = 64;  // seconds
+    // Segment 1 (loop): 0:10 to 1:04
+    const LOOP_START = 10;
+    const LOOP_END   = 64;
 
     // Segment 2 on YES: 2:52 to 2:54
-    const YES_START = 172;  // 2*60 + 52
-    const YES_END   = 174;  // 2*60 + 54
+    const YES_START  = 172;
+    const YES_END    = 174;
 
     let mode = "loop"; // "loop" or "yes"
 
@@ -424,62 +427,65 @@
       } else if (mode === "yes") {
         if (bgMusic.currentTime >= YES_END) {
           bgMusic.pause();
-          // After YES clip ends, you can either stay silent or go back to loop:
-          // mode = "loop";
-          // bgMusic.currentTime = LOOP_START;
-          // bgMusic.play().catch(()=>{});
         }
       }
     }
 
     bgMusic.addEventListener("timeupdate", enforceSegments);
 
+    // Hide music chip whenever music starts playing
+    bgMusic.addEventListener("play", () => {
+      musicGate.style.display = "none";
+    });
+
     async function startLoopMusic() {
       try {
         mode = "loop";
         bgMusic.currentTime = LOOP_START;
+        bgMusic.volume = 0.9;
         await bgMusic.play();
         musicGate.style.display = "none";
       } catch (e) {
-        // autoplay blocked
-        musicGate.style.display = "block";
+        // Autoplay blocked -> show cute chip
+        musicGate.style.display = "inline-flex";
       }
     }
 
-    // Try to start when page opens
+    // Try autoplay on load (may be blocked)
     window.addEventListener("load", () => {
       startLoopMusic();
     });
 
-    // If blocked, user can tap button
+    // Music chip click
     musicGate.addEventListener("click", () => {
       startLoopMusic();
     });
 
-    // Also allow first tap anywhere to start
+    // First tap anywhere tries to start music (and chip stays hidden if success)
     window.addEventListener("pointerdown", () => {
-      if (musicGate.style.display !== "none") startLoopMusic();
+      startLoopMusic();
     }, { once: true });
 
-    /* ---------------- YES click: play 2:52 to 2:54 ---------------- */
+    /* ---------------- YES click ---------------- */
     yesBtn.addEventListener("click", async () => {
-      // hide question + buttons + hint + top art
+      // Hide question + buttons + hint + top art
       question.style.display = "none";
       zone.style.display = "none";
       hint.style.display = "none";
       topArt.style.display = "none";
 
+      // Show result
       result.style.display = "block";
       resizeConfettiCanvas();
       fullScreenConfetti();
 
+      // Play YES segment
       try {
         mode = "yes";
         bgMusic.currentTime = YES_START;
         await bgMusic.play();
       } catch (e) {
-        // If still blocked, show gate
-        musicGate.style.display = "block";
+        musicGate.style.display = "inline-flex";
       }
     });
   </script>
